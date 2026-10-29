@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Nedladdningsstatistik – Buskalendern</title>
+<meta name="description" content="Intern statistik för nedladdningar. API-nyckeln sparas bara i webbläsaren.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8E%85%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+.adm{max-width:980px;margin:0 auto;padding:28px 22px 72px}
+.adm h1{font-size:clamp(2rem,5vw,3rem);color:var(--red);text-transform:uppercase;margin:.2rem 0 .4rem}
+.adm h2{text-align:left;margin:1.6rem 0 .7rem}
+.lead{max-width:40em}
+.help{background:var(--card);border:1px solid #EADFCB;border-radius:18px;padding:8px 18px 4px;margin:18px 0}
+.help summary{cursor:pointer;font-weight:800;color:var(--brown);padding:10px 0}
+.help ol{margin:.2rem 0 1rem;padding-left:1.2rem}
+.help li{margin:.45rem 0}
+.help code,.curl{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.86rem}
+.curl{display:block;white-space:pre-wrap;background:#fff;border:1px solid #EADFCB;border-radius:12px;padding:12px;overflow:auto}
+.panel{background:var(--card);border:1px solid #EADFCB;border-radius:18px;padding:16px;margin:16px 0}
+label{display:block;font-weight:800;margin:10px 0 4px}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.row .field{flex:1 1 140px}
+input[type="password"],input[type="text"],input[type="date"]{width:100%;font:inherit;padding:10px 12px;border-radius:12px;border:1px solid #EADFCB;background:#fff}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+button.btn{border:0;cursor:pointer;font:inherit}
+button.ghost{background:var(--sage);color:var(--green);box-shadow:none;border:1px solid var(--sage2)}
+button:disabled{opacity:.6;cursor:wait}
+.check{font-weight:700;display:flex;gap:8px;align-items:center;margin-top:8px}
+.total{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end}
+.total b{font-family:"Lora",serif;font-size:clamp(2.4rem,6vw,3.4rem);color:var(--red);line-height:1}
+.chart{overflow-x:auto;background:var(--card);border:1px solid #EADFCB;border-radius:18px;padding:12px 8px 4px}
+.chart svg{display:block;min-width:100%}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid #EADFCB;border-radius:18px;overflow:hidden}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid #EADFCB;vertical-align:middle}
+th{font-size:.85rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+td.num,th.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.meter{height:8px;background:#F8E1DC;border-radius:99px;min-width:72px}
+.meter span{display:block;height:100%;background:var(--red);border-radius:99px}
+.file{word-break:break-all}
+.status{min-height:1.4em;font-weight:700}
+.status.err{color:var(--red2)}
+.empty{color:var(--muted)}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media (max-width:520px){
+ .top nav{gap:6px;padding:8px 12px}
+ .top a{flex:1 1 calc(50% - 6px);justify-content:center;font-size:15px;padding:8px 10px}
+ .actions .btn{padding:10px 14px}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#statistik">Hoppa till statistiken</a>
+<header class="top"><nav><a href="index.html">Till kalendern</a><a href="#nyckel">API-nyckel</a><a href="#hjalp">Instruktioner</a></nav></header>
+<main class="adm">
+ <p class="kicker">Intern sida</p>
+ <h1>Nedladdningar</h1>
+ <p class="lead">Hur ofta filerna laddas ner, läst från GoatCounter. Sidan sätter inga kakor. API-nyckeln sparas bara i den här webbläsarens localStorage och finns inte i källkoden.</p>
+
+ <details class="help" id="hjalp" open>
+  <summary>Skapa sajt och API-nyckel</summary>
+  <ol>
+   <li>Skapa ett gratiskonto på <a href="https://www.goatcounter.com/">goatcounter.com</a>. GoatCounter är utan kakor.</li>
+   <li>Skapa en sajt med koden <code>buskalendern</code>. Adressen blir då <a id="dash-link" href="https://buskalendern.goatcounter.com/">buskalendern.goatcounter.com</a>. Koden ska vara samma som <code>GOATCOUNTER_CODE</code> i <code>assets/stats.js</code> och längst ner i den här filen.</li>
+   <li>Öppna användarnamnet uppe till höger och välj <b>API</b>. Skapa en nyckel och kryssa i <b>Read statistics</b> (läs statistik). <b>Record pageviews</b> räcker inte för den här sidan.</li>
+   <li>Klistra in nyckeln nedan. Den skrivs bara till localStorage i just den här webbläsaren, aldrig till git.</li>
+  </ol>
+  <h2>Om webbläsaren blockerar API:t</h2>
+  <p>GoatCounter på goatcounter.com skickar CORS-rubriker, så anropet härifrån brukar fungera. Om konsolen visar ett nätverksfel — ofta CORS, eller ett filter som uBlock Origin som stoppar goatcounter.com — kan sidan inte läsa siffrorna.</p>
+  <p>Öppna då den vanliga översikten och logga in: <a id="dash-link-2" href="https://buskalendern.goatcounter.com/">buskalendern.goatcounter.com</a>. Nedladdningar ligger där som händelser med sökvägen <code>dl/…</code> (till exempel <code>dl/filer/allt-i-ett.pdf</code>) och första uppspelningen av ljud eller film som <code>play/…</code>.</p>
+  <p>Samma JSON går att hämta i en terminal, där CORS inte gäller:</p>
+  <code class="curl" id="curl-example">curl -H "Authorization: Bearer DIN_NYCKEL" \
+  "https://buskalendern.goatcounter.com/api/v0/stats/hits?limit=100&amp;group=day"</code>
+ </details>
+
+ <form class="panel" id="nyckel">
+  <label for="token">API-nyckel</label>
+  <input id="token" type="password" autocomplete="off" spellcheck="false" placeholder="Klistra in nyckeln från GoatCounter">
+  <label class="check"><input id="show" type="checkbox"> Visa nyckel</label>
+  <div class="row">
+   <div class="field"><label for="from">Från</label><input id="from" type="date" required></div>
+   <div class="field"><label for="to">Till</label><input id="to" type="date" required></div>
+  </div>
+  <div class="actions">
+   <button class="btn" type="submit" id="load">Hämta statistik</button>
+   <button class="btn ghost" type="button" data-days="7">7 dagar</button>
+   <button class="btn ghost" type="button" data-days="30">30 dagar</button>
+   <button class="btn ghost" type="button" data-days="90">90 dagar</button>
+   <button class="btn ghost" type="button" id="year">I år</button>
+   <button class="btn ghost" type="button" id="since">Sedan 2025</button>
+   <button class="btn ghost" type="button" id="forget">Glöm nyckel</button>
+  </div>
+  <p class="status" id="status" role="status"></p>
+ </form>
+
+ <section id="statistik">
+  <div class="total"><div><p class="kicker">Totalt i intervallet</p><b id="total">–</b></div><p class="note" id="range-note"></p></div>
+  <h2>Per dag</h2>
+  <div class="chart" id="chart"><p class="empty">Välj datum och hämta statistik.</p></div>
+  <h2>Per fil</h2>
+  <div id="files"><p class="empty">Inga siffror ännu.</p></div>
+  <h2>Första uppspelningar</h2>
+  <div id="plays"><p class="empty">Inga uppspelningar i intervallet.</p></div>
+ </section>
+</main>
+<script>
+(function () {
+  'use strict';
+  /* Samma sajtkod som GOATCOUNTER_CODE i assets/stats.js. */
+  var GOATCOUNTER_CODE = 'buskalendern';
+  var API = 'https://' + GOATCOUNTER_CODE + '.goatcounter.com/api/v0';
+  var DASH = 'https://' + GOATCOUNTER_CODE + '.goatcounter.com/';
+  var TOKEN_KEY = 'buskalendern.goatcounter.token';
+  var MONTHS = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
+
+  var form = document.getElementById('nyckel');
+  var tokenInput = document.getElementById('token');
+  var fromInput = document.getElementById('from');
+  var toInput = document.getElementById('to');
+  var statusEl = document.getElementById('status');
+  var loadBtn = document.getElementById('load');
+  var help = document.getElementById('hjalp');
+
+  document.getElementById('dash-link').href = DASH;
+  document.getElementById('dash-link-2').href = DASH;
+  document.getElementById('curl-example').textContent =
+    'curl -H "Authorization: Bearer DIN_NYCKEL" \\\n  "' + API + '/stats/hits?limit=100&group=day"';
+
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function iso(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function parseISO(s) {
+    var p = String(s).split('-');
+    return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  }
+  function addDays(d, n) {
+    var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    x.setDate(x.getDate() + n);
+    return x;
+  }
+  function svDay(day) {
+    var p = day.split('-');
+    return Number(p[2]) + ' ' + MONTHS[Number(p[1]) - 1];
+  }
+  function svNum(n) { return Number(n || 0).toLocaleString('sv-SE'); }
+  function setStatus(text, isError) {
+    statusEl.textContent = text || '';
+    statusEl.className = 'status' + (isError ? ' err' : '');
+  }
+  function stamp(dateStr, end) {
+    var hh = end ? '23' : '00';
+    var probe = new Date(dateStr + 'T' + hh + ':00:00');
+    var off = -probe.getTimezoneOffset();
+    var sign = off >= 0 ? '+' : '-';
+    var abs = Math.abs(off);
+    return dateStr + 'T' + hh + ':00:00' + sign + pad(Math.floor(abs / 60)) + ':' + pad(abs % 60);
+  }
+  function readToken() {
+    try { return localStorage.getItem(TOKEN_KEY) || ''; }
+    catch (err) { return ''; }
+  }
+  function writeToken(value) {
+    try {
+      if (value) localStorage.setItem(TOKEN_KEY, value);
+      else localStorage.removeItem(TOKEN_KEY);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+  function cleanToken(raw) {
+    var t = String(raw || '').replace(/^\s+|\s+$/g, '');
+    if (/^bearer\s+/i.test(t)) t = t.replace(/^bearer\s+/i, '');
+    return t.slice(0, 500);
+  }
+
+  function setRange(from, to) {
+    fromInput.value = iso(from);
+    toInput.value = iso(to);
+  }
+  var today = new Date();
+  setRange(addDays(today, -29), today);
+
+  document.getElementById('show').addEventListener('change', function () {
+    tokenInput.type = this.checked ? 'text' : 'password';
+  });
+  function applyRange(from, to) {
+    setRange(from, to);
+    load();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('[data-days]'), function (btn) {
+    btn.addEventListener('click', function () {
+      var n = Number(btn.getAttribute('data-days'));
+      applyRange(addDays(today, 1 - n), today);
+    });
+  });
+  document.getElementById('year').addEventListener('click', function () {
+    applyRange(new Date(today.getFullYear(), 0, 1), today);
+  });
+  document.getElementById('since').addEventListener('click', function () {
+    applyRange(new Date(2025, 0, 1), today);
+  });
+  document.getElementById('forget').addEventListener('click', function () {
+    writeToken('');
+    tokenInput.value = '';
+    setStatus('Nyckeln är borttagen ur den här webbläsaren.');
+  });
+
+  var saved = readToken();
+  if (saved) tokenInput.value = saved;
+
+  function apiGet(path, token) {
+    function once(attempt) {
+      return fetch(API + path, {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        credentials: 'omit',
+        cache: 'no-store'
+      }).then(function (res) {
+        if (res.status === 429 && attempt < 2) {
+          var wait = Number(res.headers.get('X-Rate-Limit-Reset') || 1) * 1000;
+          if (!isFinite(wait) || wait < 400) wait = 1000;
+          if (wait > 5000) wait = 5000;
+          return new Promise(function (resolve) { setTimeout(resolve, wait); }).then(function () {
+            return once(attempt + 1);
+          });
+        }
+        return res.text().then(function (text) {
+          var body = {};
+          if (text) {
+            try { body = JSON.parse(text); }
+            catch (err) { body = { error: text.slice(0, 180) }; }
+          }
+          if (!res.ok) {
+            var error = new Error((body && (body.error || body.Error)) || ('HTTP ' + res.status));
+            error.status = res.status;
+            throw error;
+          }
+          return body;
+        });
+      });
+    }
+    return once(0);
+  }
+
+  function listPaths(token) {
+    var all = [];
+    function page(after) {
+      var q = '/paths?limit=200' + (after ? '&after=' + encodeURIComponent(after) : '');
+      return apiGet(q, token).then(function (data) {
+        var paths = data.paths || [];
+        all = all.concat(paths);
+        if (data.more && paths.length) return page(paths[paths.length - 1].id);
+        return all;
+      });
+    }
+    return page(0);
+  }
+
+  function listHits(token, ids, start, end) {
+    var hits = [];
+    var seen = {};
+    var step = 80;
+    function pull(include, exclude, pagesLeft) {
+      if (pagesLeft <= 0) return Promise.resolve();
+      var q = '/stats/hits?limit=100&group=day&start=' + encodeURIComponent(start) +
+        '&end=' + encodeURIComponent(end);
+      if (include.length) q += '&include_paths=' + encodeURIComponent(include.join(','));
+      if (exclude.length) q += '&exclude_paths=' + encodeURIComponent(exclude.join(','));
+      return apiGet(q, token).then(function (data) {
+        var batch = data.hits || [];
+        var added = 0;
+        batch.forEach(function (hit) {
+          var id = hit.path_id || hit.path;
+          if (seen[id]) return;
+          seen[id] = true;
+          hits.push(hit);
+          added++;
+        });
+        if (!data.more || !added) return;
+        var next = exclude.slice();
+        batch.forEach(function (hit) { if (hit.path_id) next.push(hit.path_id); });
+        return pull(include, next, pagesLeft - 1);
+      });
+    }
+    var chain = Promise.resolve();
+    for (var i = 0; i < ids.length; i += step) {
+      (function (batch) {
+        chain = chain.then(function () { return pull(batch, [], 5); });
+      })(ids.slice(i, i + step));
+    }
+    return chain.then(function () { return hits; });
+  }
+
+  function eventName(path) {
+    if (!path || path.charAt(0) === '/') return '';
+    return path;
+  }
+  function kindOf(path) {
+    var name = eventName(path);
+    if (name.indexOf('dl/') === 0) return 'dl';
+    if (name.indexOf('play/') === 0) return 'play';
+    return '';
+  }
+  function fileOf(path) {
+    var name = eventName(path);
+    return name.replace(/^(dl|play)\//, '');
+  }
+  function eachDay(from, to) {
+    var days = [];
+    var cursor = parseISO(from);
+    var last = parseISO(to);
+    var guard = 0;
+    while (cursor <= last && guard < 800) {
+      days.push(iso(cursor));
+      cursor = addDays(cursor, 1);
+      guard++;
+    }
+    return days;
+  }
+
+  function renderTable(host, rows, emptyText) {
+    host.textContent = '';
+    if (!rows.length) {
+      var p = document.createElement('p');
+      p.className = 'empty';
+      p.textContent = emptyText;
+      host.appendChild(p);
+      return;
+    }
+    var max = rows[0].count || 1;
+    var table = document.createElement('table');
+    var caption = document.createElement('caption');
+    caption.className = 'sr';
+    caption.textContent = 'Antal per fil';
+    table.appendChild(caption);
+    var thead = document.createElement('thead');
+    var hr = document.createElement('tr');
+    ['Fil', 'Antal', 'Andel'].forEach(function (label, i) {
+      var th = document.createElement('th');
+      th.textContent = label;
+      th.scope = 'col';
+      if (i === 1) th.className = 'num';
+      hr.appendChild(th);
+    });
+    thead.appendChild(hr);
+    table.appendChild(thead);
+    var tbody = document.createElement('tbody');
+    rows.forEach(function (row) {
+      var tr = document.createElement('tr');
+      var file = document.createElement('td');
+      file.className = 'file';
+      var a = document.createElement('a');
+      a.href = row.file.split('/').map(function (part) { return encodeURIComponent(part); }).join('/');
+      a.textContent = row.file;
+      file.appendChild(a);
+      var num = document.createElement('td');
+      num.className = 'num';
+      num.textContent = svNum(row.count);
+      var share = document.createElement('td');
+      var meter = document.createElement('div');
+      meter.className = 'meter';
+      var span = document.createElement('span');
+      span.style.width = Math.max(2, Math.round((row.count / max) * 100)) + '%';
+      meter.appendChild(span);
+      share.appendChild(meter);
+      tr.appendChild(file);
+      tr.appendChild(num);
+      tr.appendChild(share);
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    host.appendChild(table);
+  }
+
+  function renderChart(days, total) {
+    var host = document.getElementById('chart');
+    host.textContent = '';
+    if (!days.length) {
+      host.textContent = 'Inget intervall att rita.';
+      return;
+    }
+    var max = 1;
+    var peak = days[0];
+    days.forEach(function (d) {
+      if (d.n > max) max = d.n;
+      if (!peak || d.n > peak.n) peak = d;
+    });
+    var barW = days.length > 120 ? 6 : (days.length > 45 ? 10 : 16);
+    var gap = 3;
+    var h = 168;
+    var base = 132;
+    var w = Math.max(320, days.length * (barW + gap) + 16);
+    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+    svg.setAttribute('width', String(w));
+    svg.setAttribute('height', String(h));
+    svg.setAttribute('role', 'img');
+    var label = total
+      ? ('Nedladdningar per dag. Högst ' + peak.n + ' den ' + svDay(peak.day) + '.')
+      : 'Inga nedladdningar i intervallet.';
+    svg.setAttribute('aria-label', label);
+    days.forEach(function (d, i) {
+      var bh = d.n ? Math.max(2, Math.round((d.n / max) * 110)) : 0;
+      var x = 8 + i * (barW + gap);
+      var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      rect.setAttribute('x', String(x));
+      rect.setAttribute('y', String(base - bh));
+      rect.setAttribute('width', String(barW));
+      rect.setAttribute('height', String(bh || 1));
+      rect.setAttribute('rx', '2');
+      rect.setAttribute('fill', d.n ? '#B0362B' : '#EADFCB');
+      var title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+      title.textContent = svDay(d.day) + ': ' + svNum(d.n);
+      rect.appendChild(title);
+      svg.appendChild(rect);
+      var step = days.length > 180 ? 30 : (days.length > 60 ? 14 : (days.length > 20 ? 7 : 1));
+      if (i % step === 0 || i === days.length - 1) {
+        var text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', String(x));
+        text.setAttribute('y', '156');
+        text.setAttribute('fill', '#7A6A5E');
+        text.setAttribute('font-size', '11');
+        text.setAttribute('font-family', 'Nunito, sans-serif');
+        text.textContent = svDay(d.day);
+        svg.appendChild(text);
+      }
+    });
+    host.appendChild(svg);
+    var note = document.createElement('p');
+    note.className = 'note';
+    note.textContent = label;
+    host.appendChild(note);
+  }
+
+  function rowsFrom(hits, kind) {
+    var map = {};
+    hits.forEach(function (hit) {
+      if (kindOf(hit.path) !== kind) return;
+      var file = fileOf(hit.path);
+      if (!file) return;
+      if (!map[file]) map[file] = { file: file, count: 0, stats: [] };
+      map[file].count += Number(hit.count) || 0;
+      (hit.stats || []).forEach(function (stat) {
+        map[file].stats.push(stat);
+      });
+    });
+    return Object.keys(map).map(function (key) { return map[key]; })
+      .filter(function (row) { return row.count > 0; })
+      .sort(function (a, b) { return b.count - a.count || (a.file < b.file ? -1 : 1); });
+  }
+
+  var job = 0;
+  function load() {
+    var token = cleanToken(tokenInput.value);
+    if (!token) {
+      setStatus('Klistra in en API-nyckel med läsbehörighet.', true);
+      help.open = true;
+      return;
+    }
+    if (fromInput.value > toInput.value) {
+      setStatus('Från-datumet ligger efter till-datumet.', true);
+      return;
+    }
+    var mine = ++job;
+    tokenInput.value = token;
+    if (!writeToken(token)) {
+      setStatus('Webbläsaren kunde inte spara nyckeln. Den används bara för det här anropet.', true);
+    }
+    loadBtn.disabled = true;
+    setStatus('Hämtar från GoatCounter…');
+    var start = stamp(fromInput.value, false);
+    var end = stamp(toInput.value, true);
+    listPaths(token).then(function (paths) {
+      var ids = [];
+      paths.forEach(function (p) {
+        if (kindOf(p.path) && p.id) ids.push(p.id);
+      });
+      if (!ids.length) return [];
+      return listHits(token, ids, start, end);
+    }).then(function (hits) {
+      if (mine !== job) return;
+      hits = hits || [];
+      var downloads = rowsFrom(hits, 'dl');
+      var plays = rowsFrom(hits, 'play');
+      var total = downloads.reduce(function (sum, row) { return sum + row.count; }, 0);
+      document.getElementById('total').textContent = svNum(total);
+      document.getElementById('range-note').textContent =
+        svDay(fromInput.value) + ' – ' + svDay(toInput.value) +
+        '. Varje klick räknas för sig, även om samma person laddar ner filen igen.';
+      var byDay = {};
+      eachDay(fromInput.value, toInput.value).forEach(function (day) { byDay[day] = 0; });
+      downloads.forEach(function (row) {
+        row.stats.forEach(function (stat) {
+          if (!stat || !stat.day) return;
+          if (byDay[stat.day] === undefined) byDay[stat.day] = 0;
+          byDay[stat.day] += Number(stat.daily) || 0;
+        });
+      });
+      var days = Object.keys(byDay).sort().map(function (day) { return { day: day, n: byDay[day] }; });
+      if (mine !== job) return;
+      renderChart(days, total);
+      renderTable(document.getElementById('files'), downloads, 'Inga nedladdningar i det här intervallet.');
+      renderTable(document.getElementById('plays'), plays, 'Inga uppspelningar i det här intervallet.');
+      setStatus(total ? ('Klart. ' + svNum(total) + ' nedladdningar.') : 'Klart. Inga nedladdningar i intervallet.');
+      help.open = false;
+    }).catch(function (err) {
+      if (mine !== job) return;
+      help.open = true;
+      if (!err || !err.status) {
+        setStatus('Webbläsaren nådde inte API:t. Det är oftast ett filter eller CORS. Använd översikten på ' + DASH + ' eller curl-exemplet ovan.', true);
+        return;
+      }
+      if (err.status === 401) {
+        setStatus('Nyckeln godkändes inte. Kontrollera att den är kopierad hel.', true);
+        return;
+      }
+      if (err.status === 403) {
+        setStatus('Nyckeln saknar läsbehörighet. Kryssa i Read statistics och skapa en ny nyckel.', true);
+        return;
+      }
+      setStatus('GoatCounter svarade med fel: ' + err.message, true);
+    }).then(function () {
+      if (mine === job) loadBtn.disabled = false;
+    });
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    load();
+  });
+  if (saved) load();
+})();
+</script>
+</body>
+</html>
