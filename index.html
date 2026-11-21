@@ -8,10 +8,27 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8E%85%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="assets/style.css">
 <style>.top .vpick{display:flex;gap:10px;justify-content:center;padding:10px 12px 2px;max-width:1120px;margin:0 auto}.top .vpick a{flex:1 1 0;max-width:340px;justify-content:center;min-height:52px;font-size:18px;background:#fff;color:var(--red2);border:2px solid var(--red)}.top .vpick a.on{background:var(--red);color:#fff;box-shadow:0 3px 10px rgba(176,54,43,.3)}.top .vpick a .ag{font-weight:700;opacity:.85;margin-left:6px}@media (max-width:520px){.top .vpick a{font-size:15px;padding:8px 8px;white-space:normal;text-align:center;line-height:1.15}}</style>
+
+<style>
+.feedback-box{padding:8px 0 0}
+.feedback-box p{max-width:900px;margin:0 auto 10px;background:var(--card);border:1px solid #EADFCB;border-radius:18px;padding:16px 22px;text-align:center;color:var(--ink)}
+.feedback-box a{color:var(--red2);font-weight:700}
+#kontakt{scroll-margin-top:130px}
+.top .topbar{position:relative;display:flex;align-items:center;justify-content:center;padding:10px 16px 2px}
+.top .topbar .vpick{padding:0;margin:0;width:100%;max-width:700px}
+.top a.kontakt-btn{position:absolute;right:16px;top:50%;transform:translateY(-50%);z-index:2;min-height:40px;padding:6px 16px;font-size:15px;font-weight:800;background:#fff;color:var(--red2);border:2px solid var(--red);border-radius:999px;text-decoration:none;box-shadow:none}
+.top a.kontakt-btn:hover,.top a.kontakt-btn:focus-visible{background:var(--red);color:#fff;outline:none}
+@media (max-width:960px){
+  .top .topbar{display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px 8px;padding:8px 12px 2px}
+  .top .topbar .vpick{grid-column:1/-1;grid-row:2;max-width:none}
+  .top a.kontakt-btn{position:static;transform:none;grid-column:2;grid-row:1;justify-self:end;min-height:36px;padding:5px 14px;font-size:14px}
+  #kontakt{scroll-margin-top:180px}
+}
+</style>
 </head>
 <body>
 <a class="skip" href="#luckor">Hoppa till luckorna</a>
-<header class="top"><div class="vpick" aria-label="Välj version"><a href="index.html" class="on">Busnissen<span class="ag">3–6 år</span></a><a href="smabarn.html" class="">Små busare<span class="ag">1–3 år</span></a></div><nav><a href="#hur" >Så funkar det</a><a href="#film">Filmen</a><a href="#sangen">Sången</a><a href="#ladda-ner">Ladda ner</a><a href="#dela">Dela</a><a href="#luckor">De 24 luckorna</a></nav></header>
+<header class="top"><div class="topbar"><div class="vpick" aria-label="Välj version"><a href="index.html" class="on">Busnissen<span class="ag">3–6 år</span></a><a href="smabarn.html" class="">Små busare<span class="ag">1–3 år</span></a></div><a class="kontakt-btn" href="#kontakt">Kontakt</a></div><nav><a href="#hur" >Så funkar det</a><a href="#film">Filmen</a><a href="#sangen">Sången</a><a href="#ladda-ner">Ladda ner</a><a href="#dela">Dela</a><a href="#luckor">De 24 luckorna</a></nav></header>
 
 <section class="hero">
  <img class="c l" src="assets/img/corner_tl.jpg" alt=""><img class="c r" src="assets/img/corner_tr.jpg" alt="">
@@ -86,6 +103,11 @@
 </section>
 </main>
 
+<section id="kontakt" class="feedback-box" aria-label="Hör av er">
+ <div class="wrap">
+  <p>Ni får jättegärna dela hur det gick, så att jag kan göra Buskalendern ännu bättre. Skicka ett mejl till <a href="mailto:Marcus.mpai@gmail.com?subject=Feedback%20p%C3%A5%20Busnissens%20buskalender">Marcus.mpai@gmail.com</a></p>
+ </div>
+</section>
 <footer class="foot"><img src="assets/img/garland.jpg" alt=""><p>Busnissens buskalender · Gjord med värme för förskolan · Fungerar utan internet</p><p>Kontakt: Marcus Petersson – <a href="mailto:Marcus.mpai@gmail.com">Marcus.mpai@gmail.com</a></p></footer>
 
 <dialog id="lb" aria-label="Brev">
